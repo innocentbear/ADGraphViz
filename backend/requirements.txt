@@ -4,6 +4,6 @@ msal==1.31.1
 requests==2.32.3
 pydantic==2.10.3
 # VULNERABILITY: Vulnerable dependency with known CVE
-PyYAML==5.3.1
+PyYAML==6.0.3
 # VULNERABILITY: Outdated Django version with security issues
 Django==3.0.0
