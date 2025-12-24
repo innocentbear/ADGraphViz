@@ -1,7 +1,7 @@
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
 msal==1.31.1
-requests==2.32.3
+requests==2.32.5
 pydantic==2.10.3
 # VULNERABILITY: Vulnerable dependency with known CVE
 PyYAML==5.3.1
