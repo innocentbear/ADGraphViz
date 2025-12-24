@@ -6,4 +6,4 @@ pydantic==2.10.3
 # VULNERABILITY: Vulnerable dependency with known CVE
 PyYAML==5.3.1
 # VULNERABILITY: Outdated Django version with security issues
-Django==3.0.0
+Django==6.0
