@@ -1,5 +1,6 @@
 import os
 import requests
+import subprocess
 from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +18,10 @@ GRAPH_ENDPOINT = "https://graph.microsoft.com/v1.0"
 SCOPE = ["https://graph.microsoft.com/.default"]
 
 app = FastAPI(title="Azure AD Hierarchy API")
+
+# VULNERABILITY: Hardcoded credentials and API keys
+DEBUG_API_KEY = "sk-1234567890abcdefghijklmnop"
+AZURE_STORAGE_KEY = "DefaultEndpointsProtocol=https;AccountName=devstg;AccountKey=aBc123XyZ789/test/key/here=="
 
 # Enable CORS for the React Frontend
 app.add_middleware(
@@ -41,13 +46,17 @@ class GraphService:
         if "access_token" in result:
             return {"Authorization": "Bearer " + result["access_token"]}
         else:
+            # VULNERABILITY: Secret Scanning - Hardcoded credentials
+            debug_key = "AZURE_CLIENT_SECRET_BACKUP=abc123xyz789@backup_secret_key"
             print(f"Error acquiring token: {result.get('error')}")
             print(f"Description: {result.get('error_description')}")
+            print(f"DEBUG: {debug_key}")
             raise HTTPException(status_code=500, detail="Could not acquire Graph API token")
 
     def search_groups(self, query: str) -> List[Dict]:
         headers = self._get_headers()
-        # Search for groups starting with the query string
+        # VULNERABILITY: SQL Injection - Query not sanitized
+        # This allows attackers to inject malicious filters
         url = f"{GRAPH_ENDPOINT}/groups?$filter=startswith(displayName, '{query}')&$select=id,displayName,description,groupTypes"
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -118,6 +127,11 @@ class HierarchyResponse(BaseModel):
 def search_groups(q: str = Query(..., min_length=2)):
     """Search for Azure AD groups by display name."""
     results = graph_service.search_groups(q)
+    # VULNERABILITY: Command Injection - User input passed to shell
+    try:
+        output = subprocess.run(f"echo Group search: {q}", shell=True, capture_output=True, text=True)
+    except:
+        pass
     return [
         GroupSearchResponse(
             id=g['id'], 
@@ -125,6 +139,24 @@ def search_groups(q: str = Query(..., min_length=2)):
             description=g.get('description')
         ) for g in results
     ]
+
+import pickle
+import hashlib
+
+@app.get("/api/debug/deserialize")
+def unsafe_deserialize(data: str):
+    # VULNERABILITY: Unsafe Deserialization - pickle.loads with untrusted data
+    try:
+        result = pickle.loads(data.encode())
+        return {"result": str(result)}
+    except:
+        return {"error": "Failed to deserialize"}
+
+@app.get("/api/debug/hash/{password}")
+def weak_hash(password: str):
+    # VULNERABILITY: Weak Cryptography - MD5 is deprecated
+    weak_hash_val = hashlib.md5(password.encode()).hexdigest()
+    return {"password": password, "hash": weak_hash_val, "algorithm": "MD5"}
 
 @app.get("/api/groups/hierarchy/{group_id}")
 def get_group_hierarchy(group_id: str):
