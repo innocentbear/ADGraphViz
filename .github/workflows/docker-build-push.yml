@@ -127,8 +127,8 @@ jobs:
       - name: Run Microsoft Security DevOps Analysis
         uses: microsoft/security-devops-action@latest
         id: msdo
-        env:
-          GDN_ESLINT_PLUGINS: 'plugin-react'
+        # env:
+        #   GDN_ESLINT_PLUGINS: 'react'
         #   GDN_ESLINT_TARGETS: '**/*.jsx'
         with:
           categories: 'secrets,container,code'
