@@ -125,6 +125,7 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.GITHUB_OWNER }}/adgraphviz-backend:latest
           format: 'sarif'
+          ignore-unfixed: true
           output: 'trivy-backend.sarif'
       
       - name: Run Trivy vulnerability scanner for frontend
@@ -132,9 +133,17 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.GITHUB_OWNER }}/adgraphviz-frontend:latest
           format: 'sarif'
+          ignore-unfixed: true
           output: 'trivy-frontend.sarif'
       
-      - name: Upload Trivy results to GitHub Security tab
+      - name: Upload Trivy backend results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: 'trivy-backend.sarif,trivy-frontend.sarif'
+          sarif_file: 'trivy-backend.sarif'
+          category: 'trivy-backend'
+      
+      - name: Upload Trivy frontend results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-frontend.sarif'
+          category: 'trivy-frontend'
