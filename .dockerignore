@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+.github
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+.env.local
+dist
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.venv
+venv
+.Python
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/workflows
+
+# Documentation
+README.md
+SECURITY_LEARNING.md
+QUICKSTART.md
+
+# Environment
+.env.example

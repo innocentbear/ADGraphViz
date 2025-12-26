@@ -1,0 +1,45 @@
+# Multi-stage build for frontend
+FROM node:20-alpine as builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (use npm install if package-lock.json doesn't exist)
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+# Copy source code
+COPY src/ ./src/
+COPY index.html vite.config.js eslint.config.js ./
+
+# Build application
+RUN npm run build
+
+# Production stage - using lightweight server
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install serve to run the built application
+RUN npm install -g serve
+
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
+
+# # Create non-root user for security
+# RUN addgroup -g 1000 appuser && \
+#     adduser -D -u 1000 -G appuser appuser && \
+#     chown -R appuser:appuser /app
+
+# USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Expose port
+EXPOSE 3000
+
+# Serve the built application
+CMD ["serve", "-s", "dist", "-l", "3000"]
