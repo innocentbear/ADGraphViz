@@ -8,12 +8,155 @@
  */
 
 // ============================================================
-// VULNERABILITY 1: eval() - Arbitrary Code Execution
-// ESLint Rule: no-eval
+// CRITICAL VULNERABILITY 1: SQL Injection via direct query construction
+// Severity: CRITICAL (CWE-89)
 // ============================================================
-export function vulnerable_eval_execution(userCode) {
-  // VULNERABLE: eval() can execute arbitrary code
-  const result = eval(userCode); // User input directly evaluated
+export function critical_sql_injection(userInput, userId) {
+  // CRITICAL: Direct SQL query construction with user input
+  // Attacker can drop tables, steal data, or modify database
+  const query = `SELECT * FROM users WHERE username = '${userInput}' AND id = ${userId}`;
+  
+  // Example attack: userInput = "' OR '1'='1'; DROP TABLE users; --"
+  // Resulting query: SELECT * FROM users WHERE username = '' OR '1'='1'; DROP TABLE users; --' AND id = 123
+  
+  return executeQuery(query); // CRITICAL: Unsanitized query execution
+}
+
+// ============================================================
+// CRITICAL VULNERABILITY 2: Command Injection
+// Severity: CRITICAL (CWE-78)
+// ============================================================
+export function critical_command_injection(filename) {
+  // CRITICAL: Shell command with unsanitized user input
+  const child_process = require('child_process');
+  
+  // Attacker can execute arbitrary system commands
+  // Example: filename = "test.txt; rm -rf /"
+  const result = child_process.execSync(`cat ${filename}`); // CRITICAL: No input sanitization
+  
+  return result;
+}
+
+// ============================================================
+// CRITICAL VULNERABILITY 3: NoSQL Injection
+// Severity: CRITICAL (CWE-943)
+// ============================================================
+export function critical_nosql_injection(userEmail) {
+  // CRITICAL: NoSQL query with unsanitized user input
+  const db = require('mongodb');
+  
+  // Attacker can bypass authentication or access unauthorized data
+  // Example: userEmail = { $ne: null } would return all users
+  const query = { email: userEmail }; // CRITICAL: No validation
+  
+  return db.collection('users').findOne(query);
+}
+
+// ============================================================
+// CRITICAL VULNERABILITY 4: Hardcoded Database Credentials
+// Severity: CRITICAL (CWE-798)
+// ============================================================
+export const critical_db_credentials = {
+  // CRITICAL: Exposed database credentials in source code
+  // Commit history, decompiled code, or source leaks expose all data
+  dbHost: 'prod-database.company.com',
+  dbPort: 5432,
+  dbName: 'production_db',
+  dbUsername: 'admin',
+  dbPassword: 'P@ssw0rd123!SuperSecret', // CRITICAL: Plain text password
+  rootPassword: 'RootAccessPassword2024'
+};
+
+// ============================================================
+// CRITICAL VULNERABILITY 5: Hardcoded API Keys and Auth Tokens
+// Severity: CRITICAL (CWE-798)
+// ============================================================
+export const critical_api_keys = {
+  // CRITICAL: Production API keys in source code
+  // Attackers can impersonate the application and access all data
+  
+  // AWS Credentials
+  awsAccessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+  awsSecretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+  awsSessionToken: 'AQoDYXdzEJr...',
+  
+  // GitHub PAT Token (full access)
+  githubToken: 'ghp_16C7e42F292c6912E7710c838347Ae178B4a',
+  
+  // Stripe API Key (production)
+  stripeSecretKey: 'sk_live_4eC39HqLyjWDarhtT657tHtF',
+  
+  // Twilio Credentials
+  twilioAccountSid: 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  twilioAuthToken: 'your_auth_token_12345',
+  
+  // Google API Key
+  googleApiKey: 'AIzaSyDYwzlHQ5_vscejTS4qsU0OiJlxVeCB97A',
+  
+  // Firebase Config
+  firebaseApiKey: 'AIzaSyDYwzlHQ5_vscejTS4qsU0OiJlxVeCB97A',
+  firebaseDatabaseUrl: 'https://myproject.firebaseio.com',
+  
+  // JWT Secret (production)
+  jwtSecret: 'super_secret_key_that_should_never_be_exposed_in_code',
+  
+  // OAuth tokens
+  oauthAccessToken: 'ya29.a0AWY7CkliYhZcUBl...',
+  
+  // Private key for SSL/TLS
+  privateKey: '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA2Z3qX2...'
+};
+
+// ============================================================
+// CRITICAL VULNERABILITY 6: Authentication Bypass
+// Severity: CRITICAL (CWE-287)
+// ============================================================
+export function critical_auth_bypass(userId) {
+  // CRITICAL: No authentication check before sensitive operation
+  // Attacker can directly call this function without being logged in
+  
+  return getUserData(userId); // NO AUTH CHECK - CRITICAL!
+}
+
+// ============================================================
+// CRITICAL VULNERABILITY 7: Insecure Deserialization
+// Severity: CRITICAL (CWE-502)
+// ============================================================
+export function critical_insecure_deserialization(serializedData) {
+  // CRITICAL: Deserializing untrusted data can execute arbitrary code
+  const pickle = require('pickle');
+  
+  // Attacker can inject malicious objects that execute on deserialization
+  const data = pickle.loads(serializedData); // CRITICAL: No validation
+  
+  return data;
+}
+
+// ============================================================
+// CRITICAL VULNERABILITY 8: Path Traversal / Directory Traversal
+// Severity: CRITICAL (CWE-22)
+// ============================================================
+export function critical_path_traversal(userProvidedPath) {
+  // CRITICAL: No path validation allows reading/writing arbitrary files
+  const fs = require('fs');
+  
+  // Attacker can use: "../../../../etc/passwd" to read sensitive files
+  // Or: "../../../../var/www/html/config.php" to access configs
+  const fullPath = `/uploads/${userProvidedPath}`; // CRITICAL: No sanitization
+  
+  return fs.readFileSync(fullPath, 'utf8'); // CRITICAL: Unrestricted file read
+}
+
+// ============================================================
+// CRITICAL VULNERABILITY 9: Remote Code Execution via Eval
+// Severity: CRITICAL (CWE-95)
+// ============================================================
+export function critical_rce_eval(userCode) {
+  // CRITICAL: eval() with user input = arbitrary code execution
+  // Attacker can steal data, modify database, install backdoors, etc.
+  
+  const result = eval(userCode); // CRITICAL: Direct eval of user input
+  
   return result;
 }
 
@@ -364,5 +507,15 @@ export default {
   vulnerable_open_redirect,
   vulnerable_no_rate_limiting,
   vulnerable_unsafe_file_path,
-  vulnerable_mixed_content
+  vulnerable_mixed_content,
+  // CRITICAL vulnerabilities
+  critical_sql_injection,
+  critical_command_injection,
+  critical_nosql_injection,
+  critical_auth_bypass,
+  critical_insecure_deserialization,
+  critical_path_traversal,
+  critical_rce_eval,
+  critical_db_credentials,
+  critical_api_keys
 };
