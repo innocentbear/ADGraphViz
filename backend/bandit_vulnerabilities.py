@@ -257,14 +257,278 @@ def vulnerable_random_for_security(num_bytes: int = 16):
     token = ''.join(str(random.randint(0, 9)) for _ in range(num_bytes))  # B311
     return token
 
+
+# ============================================
+# CRITICAL: B201 - Flask debug mode in production
+# ============================================
+def vulnerable_flask_debug():
+    """
+    CRITICAL VULNERABILITY: Running Flask with debug=True in production
+    Exposes sensitive information and allows remote code execution
+    """
+    from flask import Flask
+    app = Flask(__name__)
+    
+    # CRITICAL: Debug mode enabled - allows code execution
+    app.run(debug=True, host='0.0.0.0', port=5000)  # B201: flask_debug_true
+
+
+# ============================================
+# CRITICAL: SQL Injection via string concatenation
+# ============================================
+def vulnerable_sql_injection(user_email: str, user_id: int):
+    """
+    CRITICAL VULNERABILITY: SQL Injection
+    Direct string concatenation in SQL queries
+    """
+    import sqlite3
+    
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    
+    # CRITICAL: SQL injection vulnerability
+    # Attacker can use: email = "'; DROP TABLE users; --"
+    query = f"SELECT * FROM users WHERE email = '{user_email}' AND id = {user_id}"
+    cursor.execute(query)  # B608: sql_injection
+    
+    return cursor.fetchall()
+
+
+# ============================================
+# CRITICAL: Command Injection
+# ============================================
+def vulnerable_command_injection(filename: str):
+    """
+    CRITICAL VULNERABILITY: Command Injection
+    User input directly passed to shell commands
+    """
+    import os
+    
+    # CRITICAL: Command injection via os.system
+    # Attacker can use: filename = "test.txt; rm -rf /"
+    result = os.system(f'cat {filename}')  # B605: start_process_with_no_shell
+    
+    # Also vulnerable: using shell=True with subprocess
+    import subprocess
+    subprocess.run(f'ls -la {filename}', shell=True)  # B602: shell_injection
+
+
+# ============================================
+# CRITICAL: Hard-coded passwords and secrets
+# ============================================
+def vulnerable_hardcoded_secrets():
+    """
+    CRITICAL VULNERABILITY: Hardcoded credentials in code
+    Exposed in version control history and compiled code
+    """
+    # Database credentials
+    db_host = 'prod-db.company.com'
+    db_user = 'admin'
+    db_password = 'SuperSecure@123!'  # B105: hardcoded_password
+    db_port = 5432
+    
+    # API Keys
+    api_key = 'sk_live_4eC39HqLyjWDarhtT657tHtF'  # Stripe key
+    github_token = 'ghp_16C7e42F292c6912E7710c838347Ae178B4a'
+    
+    # AWS credentials
+    aws_access_key = 'AKIAIOSFODNN7EXAMPLE'
+    aws_secret_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+    
+    # OAuth tokens
+    oauth_token = 'ya29.a0AWY7CkliYhZcUBl...'
+    refresh_token = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjExIn0...'
+    
+    # JWT Secret
+    jwt_secret = 'my_super_secret_jwt_key_never_share_this'
+    
+    return {
+        'db_password': db_password,
+        'api_key': api_key,
+        'github_token': github_token,
+        'aws_secret': aws_secret_key
+    }
+
+
+# ============================================
+# CRITICAL: Unsafe YAML deserialization
+# ============================================
+def vulnerable_yaml_load(user_config: str):
+    """
+    CRITICAL VULNERABILITY: YAML deserialization with arbitrary code execution
+    yaml.load() allows arbitrary Python code execution
+    """
+    import yaml
+    
+    # CRITICAL: yaml.load allows code execution
+    # Attacker YAML: !!python/object/apply:os.system ["rm -rf /"]
+    config = yaml.load(user_config, Loader=yaml.Loader)  # B506: yaml_load
+    
+    return config
+
+
+# ============================================
+# CRITICAL: Insecure cryptographic algorithms
+# ============================================
+def vulnerable_insecure_crypto():
+    """
+    CRITICAL VULNERABILITY: Using weak or insecure cryptographic algorithms
+    """
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    from cryptography.hazmat.backends import default_backend
+    
+    # CRITICAL: DES is deprecated and insecure
+    cipher = Cipher(
+        algorithms.TripleDES(b'0123456789abcdef0123456'),  # Weak key size
+        modes.ECB(),  # ECB mode - doesn't hide patterns
+        backend=default_backend()
+    )
+    
+    return cipher
+
+
+# ============================================
+# CRITICAL: Path traversal attack
+# ============================================
+def vulnerable_path_traversal(user_file: str):
+    """
+    CRITICAL VULNERABILITY: Path traversal attack
+    No validation on file paths allows reading arbitrary files
+    """
+    import os
+    
+    # CRITICAL: User can use '../../../etc/passwd'
+    file_path = f'/uploads/{user_file}'
+    
+    try:
+        with open(file_path, 'r') as f:
+            content = f.read()  # B101: assert_used
+        return content
+    except:
+        pass  # B110: Bare except
+
+
+# ============================================
+# CRITICAL: Insecure temporary file creation
+# ============================================
+def vulnerable_temp_file_creation():
+    """
+    CRITICAL VULNERABILITY: Insecure temporary file creation
+    predictable filenames can lead to race conditions
+    """
+    import tempfile
+    
+    # CRITICAL: mktemp is predictable (DEPRECATED)
+    temp_file = tempfile.mktemp()  # B108: hardcoded_temp_filename
+    
+    # Write sensitive data to predictable location
+    with open(temp_file, 'w') as f:
+        f.write('API_KEY=secret_key_12345')
+    
+    return temp_file
+
+
+# ============================================
+# CRITICAL: Logging sensitive information
+# ============================================
+def vulnerable_logging_secrets():
+    """
+    CRITICAL VULNERABILITY: Logging sensitive information
+    Secrets exposed in application logs
+    """
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    user_data = {
+        'username': 'john',
+        'password': 'SecurePassword123!',
+        'credit_card': '4532-1234-5678-9010',
+        'ssn': '123-45-6789',
+        'api_token': 'ghp_16C7e42F292c6912E7710c838347Ae178B4a'
+    }
+    
+    # CRITICAL: Logging sensitive data
+    logger.info(f'User login: {user_data}')  # Logs everything including secrets
+    logger.debug(f'Password: {user_data["password"]}')
+    logger.warning(f'Credit card: {user_data["credit_card"]}')
+    
+    return user_data
+
+
+# ============================================
+# CRITICAL: Insecure random number generation
+# ============================================
+def vulnerable_weak_random_generation():
+    """
+    CRITICAL VULNERABILITY: Using weak random for security operations
+    random module is not cryptographically secure
+    """
+    import random
+    
+    # CRITICAL: Not suitable for security operations
+    session_token = ''.join(
+        random.choice('0123456789abcdef') for _ in range(32)
+    )  # B311: random
+    
+    # CRITICAL: Predictable reset token
+    reset_token = str(random.randint(100000, 999999))  # 6 digits only!
+    
+    return session_token, reset_token
+
+
+# ============================================
+# CRITICAL: Insecure deserialization
+# ============================================
+def vulnerable_insecure_deserialization(pickled_data: bytes):
+    """
+    CRITICAL VULNERABILITY: Unsafe pickle deserialization
+    Can lead to arbitrary code execution
+    """
+    import pickle
+    
+    # CRITICAL: Pickle deserialization is dangerous
+    # Attacker can create malicious pickled objects
+    data = pickle.loads(pickled_data)  # B301: pickle
+    
+    return data
+
+
+# ============================================
+# CRITICAL: Insecure SSL/TLS configuration
+# ============================================
+def vulnerable_insecure_ssl_requests():
+    """
+    CRITICAL VULNERABILITY: Insecure SSL/TLS configuration
+    Disabling certificate verification allows man-in-the-middle attacks
+    """
+    import requests
+    
+    # CRITICAL: Disabling SSL verification
+    response = requests.get(
+        'https://api.example.com/data',
+        verify=False  # B501: verify=False disables SSL cert verification
+    )
+    
+    # CRITICAL: Ignoring SSL errors
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
+    return response
+
+
 # ============================================
 # Comment examples of what to look for
 # ============================================
 """
 Bandit will detect:
 - B102: exec_used - Direct code execution
+- B105: hardcoded_password - Hardcoded credentials
+- B108: hardcoded_temp_filename - Predictable temp files
 - B110: try_except_pass - Bare except clauses
 - B112: try_except_pass - Exception swallowing
+- B201: flask_debug_true - Debug mode enabled
+- B301: pickle_use - Unsafe pickle deserialization
 - B303: use_of_insecure_MD2_MD4_MD5_SHA1 - Weak hash MD5
 - B304: use_of_insecure_hash_functions - Weak hash SHA1
 - B312: telnetlib - Unencrypted protocol
@@ -276,4 +540,9 @@ Bandit will detect:
 - B503: ssl_with_no_version - No SSL version specified
 - B504: ssl_with_bad_defaults - Insecure SSL defaults
 - B505: weak_key_size - Weak cryptographic keys
+- B506: yaml_load - YAML code execution
+- B602: shell_injection - Command injection
+- B605: start_process_with_no_shell - Unsafe shell commands
+- B608: sql_injection - SQL injection vulnerability
 """
+
