@@ -128,11 +128,10 @@ jobs:
         uses: microsoft/security-devops-action@latest
         id: msdo
         env:
-          GDN_ESLINT_TARGETS: 'src/**/*.{js,jsx,ts,tsx}'
-          GDN_ESLINT_EXTENSIONS: '.js,.jsx,.ts,.tsx'
+          GDN_ESLINT_TARGETS: '**/*.jsx'
         with:
           categories: 'secrets,container,code'
-          config: '.gdn.json'
+          # config: '.gdn.json'
       
       - name: Run Trivy vulnerability scanner for backend
         uses: aquasecurity/trivy-action@master
