@@ -1,0 +1,19 @@
+{
+  "tools": [
+    {
+      "tool": {
+        "name": "ESLint",
+        "version": "Latest"
+      },
+      "arguments": {
+        "DisableDefaultConfigurationFile": true,
+        "ConfigurationFile": "$(SDLRequiredConfigurationFile)",
+        "Extensions": [".js", ".jsx", ".ts", ".tsx"],
+        "ExclusionPatterns": "*.d.ts,node_modules/**,dist/**",
+        "OutputFile": "",
+        "OutputFormat": "$(InstallDirectory)/node_modules/@microsoft/eslint-formatter-sarif/sarif.js",
+        "Targets": "src/**/*.{js,jsx,ts,tsx}"
+      }
+    }
+  ]
+}
